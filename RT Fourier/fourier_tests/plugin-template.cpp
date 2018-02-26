@@ -53,6 +53,10 @@ static DefaultGUIModel::variable_t vars[] = {
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
+    "# Samples in frequency band", "How many samples within the frequency band will be measure for power.",
+    DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
+  },
+  {
     "Buffer length", "How far back to measure frequency band level with (ms)",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
