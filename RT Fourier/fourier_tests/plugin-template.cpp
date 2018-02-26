@@ -35,16 +35,21 @@ createRTXIPlugin(void)
 static DefaultGUIModel::variable_t vars[] = {
   // { ElementName, Hover description, TypeOfElement | (specified to be:) parameterType},
   {
-		"Output Channel",
-		"Outputs levels of the specified frequency band",
-		DefaultGUIModel::OUTPUT,
-	},
+    "Frequency band level",
+    "Outputs levels of the specified frequency band",
+     DefaultGUIModel::OUTPUT,
+  },
   {
-    "From", "(hz)",
+    "Voltage In",
+    "Realtime input voltage level",
+     DefaultGUIModel::INPUT,
+  },
+  {
+    "from (hz)", "Lower end of frequency band",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
-    "to", "(hz)",
+    "to (hz)", "Higher end of frequency band",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
@@ -109,8 +114,7 @@ void PluginTemplate::update_fourier(double new_data)
 void
 PluginTemplate::initParameters(void)
 {
-  some_parameter = 0;
-  some_state = 0;
+  
 }
 
 void
@@ -122,12 +126,12 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
       setState("Output Channel", output);
       setParameter("Buffer length", bufferLength);
-      setParameter("From", from);
-      setParameter("To", to);
+      setParameter("from (hz)", from);
+      setParameter("to (hz)", to);
       break;
 
     case MODIFY:
-      some_parameter = getParameter("GUI label").toDouble();
+      
       break;
 
     case UNPAUSE:
@@ -148,6 +152,7 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
 void
 PluginTemplate::customizeGUI(void)
 {
+  /*
   QGridLayout* customlayout = DefaultGUIModel::getLayout();
 
   QGroupBox* button_group = new QGroupBox;
@@ -163,4 +168,5 @@ PluginTemplate::customizeGUI(void)
 
   customlayout->addWidget(button_group, 0, 0);
   setLayout(customlayout);
+  */
 }
