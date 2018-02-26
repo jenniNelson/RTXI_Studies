@@ -45,7 +45,7 @@ private:
   double period;
 
   // History of received recordings.
-  double[] data_history;
+  double* data_history;
   // Size determined by user and RT period.
   int data_history_size;
   // Points to oldest data in data_history
