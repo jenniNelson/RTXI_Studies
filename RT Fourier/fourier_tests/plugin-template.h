@@ -45,7 +45,7 @@ private:
   double period;
 
   // History of received recordings.
-  double[] data_history;
+  double* data_history;
   // Size determined by user and RT period.
   int data_history_size;
   // Points to oldest data in data_history
@@ -62,14 +62,14 @@ private:
       //int offset = data_size % frequency;
       return 1.0; //return sin(magic);
     }
-  }
+  };
 
-  frequency[] frequencies;
-
+  frequency* frequencies;
+  int num_frequencies;
 
   void initParameters();
 
-  void update_fourier(doube new_data);
+  void update_fourier(double new_data);
 
 private slots:
   // these are custom functions that can also be connected to events

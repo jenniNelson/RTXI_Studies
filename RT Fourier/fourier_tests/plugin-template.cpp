@@ -35,7 +35,7 @@ createRTXIPlugin(void)
 static DefaultGUIModel::variable_t vars[] = {
   // { ElementName, Hover description, TypeOfElement | (specified to be:) parameterType},
   {
-    "GUI label", "Tooltip description",
+    "JENNI WAS HERE", "And this actually installed!",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
