@@ -40,7 +40,7 @@ protected:
   virtual void update(DefaultGUIModel::update_flags_t);
 
 private:
-  double some_parameter;
+  double output;
   double some_state;
   double period;
 

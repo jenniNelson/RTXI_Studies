@@ -35,11 +35,21 @@ createRTXIPlugin(void)
 static DefaultGUIModel::variable_t vars[] = {
   // { ElementName, Hover description, TypeOfElement | (specified to be:) parameterType},
   {
-    "JENNI WAS HERE", "And this actually installed!",
+		"Output Channel",
+		"Outputs levels of the specified frequency band",
+		DefaultGUIModel::OUTPUT,
+	},
+  {
+    "From", "(hz)",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
-    "A State", "Tooltip description", DefaultGUIModel::STATE,
+    "to", "(hz)",
+    DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
+  },
+  {
+    "Buffer length", "How far back to measure frequency band level with (ms)",
+    DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
 };
 
@@ -108,9 +118,12 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
 {
   switch (flag) {
     case INIT:
+      double bufferLength, from, to;
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
-      setParameter("GUI label", some_parameter);
-      setState("A State", some_state);
+      setState("Output Channel", output);
+      setParameter("Buffer length", bufferLength);
+      setParameter("From", from);
+      setParameter("To", to);
       break;
 
     case MODIFY:
