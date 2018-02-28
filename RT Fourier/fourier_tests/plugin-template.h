@@ -50,6 +50,10 @@ private:
   int data_history_size;
   // Points to oldest data in data_history
   int data_idx;
+  // The newest chunk of data (Used in RT method)
+  double input;
+  // Out-of-date data (Used in RT method)
+  double replaced;
 
   // For frequency bands not partitioning data_history neatly
   int offset_or_not; // 0 = don't, 1 = offset by data_size & FB.size
@@ -58,6 +62,10 @@ private:
     double frequency;     // hz - base of frequency
     //double band;          // band size (hz)
     double sum;
+    frequency(double _frequency){
+      frequency = _frequency;
+      sum = 0;
+    }
     double significance(int index, int wrap_or_not){
       //int offset = data_size % frequency;
       return 1.0; //return sin(magic);
@@ -66,11 +74,12 @@ private:
 
   frequency* frequencies;
   int num_frequencies;
+  double total_sum;
 
   void initParameters();
 
   void update_fourier(double new_data);
 
 private slots:
-  
+
 };

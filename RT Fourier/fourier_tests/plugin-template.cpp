@@ -53,8 +53,9 @@ static DefaultGUIModel::variable_t vars[] = {
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
-    "# Samples in frequency band", "How many samples within the frequency band will be measure for power.",
-    DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
+    "# Samples in frequency band", "How many samples within the frequency band"+
+    " will be measure for power.",
+    DefaultGUIModel::PARAMETER | DefaultGUIModel::INTEGER,
   },
   {
     "Buffer length", "How far back to measure frequency band level with (ms)",
@@ -71,7 +72,6 @@ PluginTemplate::PluginTemplate(void)
   DefaultGUIModel::createGUI(vars,
                              num_vars); // this is required to create the GUI
   customizeGUI();
-  initParameters();
   // Update is how you insert code while running. INIT is a case for setting vars
   update(INIT); // this is optional, you may place initialization code directly
                 // into the constructor
@@ -96,29 +96,56 @@ PluginTemplate::execute(void)
 void PluginTemplate::update_fourier(double new_data)
 {
   // get input data
+  input = input(0);
 
   // get the oldest piece of data we have
+  replaced = data_history[data_idx];
 
-  // for every frequency we're checking:
+  // for every frequency we're sampling, update sum according to it:
+  for (int i = 0; i < num_frequencies; i++) {
     // subtract the old data from that frequency's sum
     // (according to its significance for the frequency band)
+    total_sum -= replaced * frequencies[i].significance(i, offset_or_not);
 
     // add the new data, again according to its significance
+    total_sum += input * frequencies[i].significance(i, offset_or_not);
 
-    // Possibly updating output? Look into how other modules do that.
+  }
+
+  // Output the average power level over all the samples
+  output = (total_sum/num_samples)/data_history_size;
+  output(0) = output;
 
   // replace old data with new
-  // increment our data pointer
+  data_history[data_idx] = input;
+
+  // increment data pointer
+  data_idx++;
   // wrap pointer if needed (and notify frequency bands they should wrap)
-
-
-
+  if(data_idx > data_history_size){
+    data_idx = data_idx % data_history_size;
+    offset_or_not = (offset_or_not + 1) % 2;
+  }
 }
 
 void
-PluginTemplate::initParameters(void)
+PluginTemplate::initParameters(double buffer_length, double from,
+                               double to,            int samples)
 {
-  
+  data_history_size = static_cast<int>(buffer_length / period);
+  data_history = new double[data_history_size];
+
+  num_frequencies = samples;
+  double bandwidth = to - from;
+  double gap = bandwidth / (samples + 1);
+
+  // initialize array of all our frequency samples
+  frequencies = new frequency[num_frequencies];
+  for (int i = 0; i < samples; i++) {
+    // Sample the middles of frequency range (i.e [_._._._] where . is a sample.)
+    frequencies[i] = new frequency(gap*i + gap/2 + from);
+  }
+
 }
 
 void
@@ -126,16 +153,19 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
 {
   switch (flag) {
     case INIT:
-      double bufferLength, from, to;
+      double buffer_length, from, to;
+      int num_samples;
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
       setState("Output Channel", output);
-      setParameter("Buffer length", bufferLength);
+      setParameter("Buffer length", buffer_length); // ms
       setParameter("from (hz)", from);
       setParameter("to (hz)", to);
+      setParameter("# Samples in frequency band", num_samples);
+      initParameters(buffer_length, from, to, num_samples);
       break;
 
     case MODIFY:
-      
+
       break;
 
     case UNPAUSE:
@@ -145,6 +175,7 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       break;
 
     case PERIOD:
+      // We really don't know what to do here
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
       break;
 
