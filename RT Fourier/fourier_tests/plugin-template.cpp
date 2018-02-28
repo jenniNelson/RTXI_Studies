@@ -40,9 +40,19 @@ static DefaultGUIModel::variable_t vars[] = {
      DefaultGUIModel::OUTPUT,
   },
   {
+    "Frequency band level",
+    "Outputs levels of the specified frequency band",
+     DefaultGUIModel::STATE,
+  },
+  {
     "Voltage In",
     "Realtime input voltage level",
      DefaultGUIModel::INPUT,
+  },
+  {
+    "Voltage In",
+    "Realtime input voltage level",
+     DefaultGUIModel::STATE,
   },
   {
     "from (hz)", "Lower end of frequency band",
@@ -53,8 +63,7 @@ static DefaultGUIModel::variable_t vars[] = {
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
-    "# Samples in frequency band", "How many samples within the frequency band"+
-    " will be measure for power.",
+    "# Samples in frequency band", "How many samples within the frequency band will be measure for power.",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::INTEGER,
   },
   {
@@ -96,7 +105,7 @@ PluginTemplate::execute(void)
 void PluginTemplate::update_fourier(double new_data)
 {
   // get input data
-  input = input(0);
+  new_data = input(0);
 
   // get the oldest piece of data we have
   replaced = data_history[data_idx];
@@ -108,16 +117,16 @@ void PluginTemplate::update_fourier(double new_data)
     total_sum -= replaced * frequencies[i].significance(i, offset_or_not);
 
     // add the new data, again according to its significance
-    total_sum += input * frequencies[i].significance(i, offset_or_not);
+    total_sum += new_data * frequencies[i].significance(i, offset_or_not);
 
   }
 
   // Output the average power level over all the samples
-  output = (total_sum/num_samples)/data_history_size;
-  output(0) = output;
+  out_data = (total_sum/num_frequencies)/data_history_size;
+  output(0) = out_data;
 
   // replace old data with new
-  data_history[data_idx] = input;
+  data_history[data_idx] = new_data;
 
   // increment data pointer
   data_idx++;
@@ -143,7 +152,7 @@ PluginTemplate::initParameters(double buffer_length, double from,
   frequencies = new frequency[num_frequencies];
   for (int i = 0; i < samples; i++) {
     // Sample the middles of frequency range (i.e [_._._._] where . is a sample.)
-    frequencies[i] = new frequency(gap*i + gap/2 + from);
+    frequencies[i] = frequency(gap*i + gap/2 + from);
   }
 
 }
@@ -154,14 +163,14 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
   switch (flag) {
     case INIT:
       double buffer_length, from, to;
-      int num_samples;
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
-      setState("Output Channel", output);
+      setState("Output Channel", out_data);
+      setState("Voltage In", new_data);
       setParameter("Buffer length", buffer_length); // ms
       setParameter("from (hz)", from);
       setParameter("to (hz)", to);
-      setParameter("# Samples in frequency band", num_samples);
-      initParameters(buffer_length, from, to, num_samples);
+      setParameter("# Samples in frequency band", num_frequencies);
+      initParameters(buffer_length, from, to, num_frequencies);
       break;
 
     case MODIFY:

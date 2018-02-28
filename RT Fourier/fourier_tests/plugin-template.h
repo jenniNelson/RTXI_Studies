@@ -40,8 +40,7 @@ protected:
   virtual void update(DefaultGUIModel::update_flags_t);
 
 private:
-  double output;
-  double some_state;
+  double out_data;
   double period;
 
   // History of received recordings.
@@ -51,7 +50,7 @@ private:
   // Points to oldest data in data_history
   int data_idx;
   // The newest chunk of data (Used in RT method)
-  double input;
+  double new_data;
   // Out-of-date data (Used in RT method)
   double replaced;
 
@@ -59,12 +58,11 @@ private:
   int offset_or_not; // 0 = don't, 1 = offset by data_size & FB.size
 
   struct frequency{
-    double frequency;     // hz - base of frequency
+    double frequency_value;     // hz - base of frequency
     //double band;          // band size (hz)
     double sum;
-    frequency(double _frequency){
-      frequency = _frequency;
-      sum = 0;
+    frequency(double _frequency=0.0):frequency_value(_frequency),sum(0.0)
+    {
     }
     double significance(int index, int wrap_or_not){
       //int offset = data_size % frequency;
@@ -76,7 +74,8 @@ private:
   int num_frequencies;
   double total_sum;
 
-  void initParameters();
+  void initParameters(double buffer_length, double from,
+                      double to,            int samples);
 
   void update_fourier(double new_data);
 
