@@ -114,10 +114,10 @@ void PluginTemplate::update_fourier(double new_data)
   for (int i = 0; i < num_frequencies; i++) {
     // subtract the old data from that frequency's sum
     // (according to its significance for the frequency band)
-    total_sum -= replaced * frequencies[i].significance(i, offset_or_not);
+    total_sum -= replaced * significance(frequencies[i], i, offset_or_not);
 
     // add the new data, again according to its significance
-    total_sum += new_data * frequencies[i].significance(i, offset_or_not);
+    total_sum += new_data * significance(frequencies[i], i, offset_or_not);
 
   }
 
@@ -137,6 +137,12 @@ void PluginTemplate::update_fourier(double new_data)
   }
 }
 
+double PluginTemplate::significance(double frequency, int spot_in_history, bool offset_or_not){
+
+
+  return 1.0;
+}
+
 void
 PluginTemplate::initParameters(double buffer_length, double from,
                                double to,            int samples)
@@ -149,10 +155,10 @@ PluginTemplate::initParameters(double buffer_length, double from,
   double gap = bandwidth / (samples + 1);
 
   // initialize array of all our frequency samples
-  frequencies = new frequency[num_frequencies];
+  frequencies = new double[num_frequencies];
   for (int i = 0; i < samples; i++) {
     // Sample the middles of frequency range (i.e [_._._._] where . is a sample.)
-    frequencies[i] = frequency(gap*i + gap/2 + from);
+    frequencies[i] = gap*i + gap/2 + from;
   }
 
 }

@@ -57,20 +57,8 @@ private:
   // For frequency bands not partitioning data_history neatly
   int offset_or_not; // 0 = don't, 1 = offset by data_size & FB.size
 
-  struct frequency{
-    double frequency_value;     // hz - base of frequency
-    //double band;          // band size (hz)
-    double sum;
-    frequency(double _frequency=0.0):frequency_value(_frequency),sum(0.0)
-    {
-    }
-    double significance(int index, int wrap_or_not){
-      //int offset = data_size % frequency;
-      return 1.0; //return sin(magic);
-    }
-  };
 
-  frequency* frequencies;
+  double* frequencies;
   int num_frequencies;
   double total_sum;
 
@@ -78,6 +66,7 @@ private:
                       double to,            int samples);
 
   void update_fourier(double new_data);
+  double significance(double frequency, int spot_in_history, bool offset_or_not);
 
 private slots:
 
