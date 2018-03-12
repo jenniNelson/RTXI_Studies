@@ -65,7 +65,7 @@ private:
   void initParameters(double buffer_length, double from,
                       double to,            int samples);
 
-  void update_fourier(double new_data);
+  void update_fourier();
   double significance(double frequency, int spot_in_history, bool offset_or_not);
 
 private slots:

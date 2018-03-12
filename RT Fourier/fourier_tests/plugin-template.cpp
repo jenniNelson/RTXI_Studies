@@ -55,11 +55,11 @@ static DefaultGUIModel::variable_t vars[] = {
      DefaultGUIModel::STATE,
   },
   {
-    "from (hz)", "Lower end of frequency band",
+    "from (Hz)", "Lower end of frequency band",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
-    "to (hz)", "Higher end of frequency band",
+    "to (Hz)", "Higher end of frequency band",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
   {
@@ -98,11 +98,12 @@ PluginTemplate::~PluginTemplate(void)
 void
 PluginTemplate::execute(void)
 {
+  update_fourier();
   return;
 }
 
 // Update the values in our fourier transform based on the newest data.
-void PluginTemplate::update_fourier(double new_data)
+void PluginTemplate::update_fourier()
 {
   // get input data
   new_data = input(0);
@@ -156,8 +157,10 @@ PluginTemplate::initParameters(double buffer_length, double from,
 
   // initialize array of all our frequency samples
   frequencies = new double[num_frequencies];
-  for (int i = 0; i < samples; i++) {
-    // Sample the middles of frequency range (i.e [_._._._] where . is a sample.)
+
+  for (int i = 0; i < num_frequencies; i++) {
+    // Sample the middles of frequency range 
+    // (i.e [_._._._] where . is a sample.)
     frequencies[i] = gap*i + gap/2 + from;
   }
 
@@ -166,21 +169,41 @@ PluginTemplate::initParameters(double buffer_length, double from,
 void
 PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
 {
+  double buffer_length, from, to;
   switch (flag) {
     case INIT:
-      double buffer_length, from, to;
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
+      out_data = 0.0; new_data = 0.0; 
+      buffer_length = 10.0; from = 13.0; to = 30.0;
+      num_frequencies = 1;
       setState("Output Channel", out_data);
       setState("Voltage In", new_data);
       setParameter("Buffer length", buffer_length); // ms
-      setParameter("from (hz)", from);
-      setParameter("to (hz)", to);
+      setParameter("from (Hz)", from);
+      setParameter("to (Hz)", to);
       setParameter("# Samples in frequency band", num_frequencies);
+      
       initParameters(buffer_length, from, to, num_frequencies);
       break;
 
     case MODIFY:
-
+      
+      /*
+      buffer_length = getParameter("Buffer length").toDouble(); // ms
+      from = getParameter("from (Hz)").toDouble();
+      to = getParameter("to (Hz)").toDouble();
+      num_frequencies = getParameter("# Samples in frequency band").toInt();
+      // Deallocate memory allocated by INIT to reallocate
+      delete frequencies; 
+      delete data_history;
+      initParameters(buffer_length, from, to, num_frequencies);
+      
+      /*for (int i = 0; i < samples; i++) {
+        // Sample the middles of frequency range
+        //  (i.e [_._._._] where . is a sample.)
+        double gap = (to - from) / (samples + 1);
+        frequencies[i] = gap*i + gap/2 + from;
+      }*/
       break;
 
     case UNPAUSE:
@@ -192,6 +215,10 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
     case PERIOD:
       // We really don't know what to do here
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
+      break;
+    case EXIT:
+      delete frequencies; // Deallocate memory
+      delete data_history;
       break;
 
     default:
