@@ -159,7 +159,7 @@ PluginTemplate::initParameters(double buffer_length, double from,
   frequencies = new double[num_frequencies];
 
   for (int i = 0; i < num_frequencies; i++) {
-    // Sample the middles of frequency range 
+    // Sample the middles of frequency range
     // (i.e [_._._._] where . is a sample.)
     frequencies[i] = gap*i + gap/2 + from;
   }
@@ -173,8 +173,8 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
   switch (flag) {
     case INIT:
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
-      out_data = 0.0; new_data = 0.0; 
-      buffer_length = 10.0; from = 13.0; to = 30.0;
+      out_data = 0.0; new_data = 0.0;
+      buffer_length = 100.0; from = 13.0; to = 30.0;
       num_frequencies = 1;
       setState("Output Channel", out_data);
       setState("Voltage In", new_data);
@@ -182,22 +182,22 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       setParameter("from (Hz)", from);
       setParameter("to (Hz)", to);
       setParameter("# Samples in frequency band", num_frequencies);
-      
+
       initParameters(buffer_length, from, to, num_frequencies);
       break;
 
     case MODIFY:
-      
-      /*
+
+
       buffer_length = getParameter("Buffer length").toDouble(); // ms
       from = getParameter("from (Hz)").toDouble();
       to = getParameter("to (Hz)").toDouble();
       num_frequencies = getParameter("# Samples in frequency band").toInt();
       // Deallocate memory allocated by INIT to reallocate
-      delete frequencies; 
+      delete frequencies;
       delete data_history;
       initParameters(buffer_length, from, to, num_frequencies);
-      
+
       /*for (int i = 0; i < samples; i++) {
         // Sample the middles of frequency range
         //  (i.e [_._._._] where . is a sample.)
