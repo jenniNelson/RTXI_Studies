@@ -116,17 +116,17 @@ void PluginTemplate::update_fourier()
   for (int i = 0; i < num_frequencies; i++) {
     // subtract the old data from that frequency's sum
     // (according to its significance for the frequency band)
-    total_sum -= replaced * significance(frequencies[i], i, offset_or_not);
+    total_sum -= replaced * significance(frequencies[i], data_idx, !offset_or_not);
 
     // add the new data, again according to its significance
-    total_sum += new_data * significance(frequencies[i], i, offset_or_not);
+    total_sum += new_data * significance(frequencies[i], data_idx, offset_or_not);
 
   }
 
   // Output the average power level over all the samples
   out_data = (total_sum/num_frequencies)/data_history_size;
-  output(0) = out_data;
-
+  //output(0) = out_data;
+  output(0) = significance(frequencies[1], data_idx, offset_or_not);
   // replace old data with new
   data_history[data_idx] = new_data;
 
@@ -140,24 +140,33 @@ void PluginTemplate::update_fourier()
 }
 
 double PluginTemplate::significance(double frequency, int spot_in_history, bool offset_or_not){
-  if(offset_or_not == 1){
-    spot_in_history += data_history_size % static_cast<int>(frequency/period)
+  if(offset_or_not){
+    spot_in_history += data_history_size % static_cast<int>(frequency/period);
   }
-  double value = std::cos(-2*PI*spot_in_history*frequency/data_history_size);
-  return 1.0;
+  double value_real = std::cos(-2*PI*spot_in_history*frequency/data_history_size);
+  //double value_imaginary = std::sin(-2*PI*spot_in_history*frequency/data_history_size);
+  //double value = std::sqrt(value_real*value_real + )
+  return std::abs(value_real);
 }
 
 void
 PluginTemplate::initParameters(double buffer_length, double from,
                                double to,            int samples)
 {
-  data_history_size = static_cast<int>(buffer_length / period); // 
+  data_history_size = static_cast<int>(buffer_length / period); //
   data_history = new double[data_history_size];
 
   // Clear out potential junk
   for(int i = 0; i < data_history_size; i++){
     data_history[i] = 0;
   }
+  //Reset anything that could go wrong.
+  total_sum = 0;
+  data_idx = 0;
+  offset_or_not = 0;
+  replaced = 0;
+  out_data = 0;
+
 
   num_frequencies = samples;
   double bandwidth = to - from;
@@ -176,7 +185,7 @@ PluginTemplate::initParameters(double buffer_length, double from,
 
 void
 PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
-{  
+{
   double buffer_length, from, to;
   switch (flag) {
     case INIT:
