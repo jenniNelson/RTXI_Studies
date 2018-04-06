@@ -22,11 +22,13 @@
  */
 
 #include <default_gui_model.h>
+#include <math.h>
 
 class PluginTemplate : public DefaultGUIModel
 {
 
   Q_OBJECT
+  #define PI 3.1415926535897932384626433832795
 
 public:
   PluginTemplate(void);
@@ -55,7 +57,7 @@ private:
   double replaced;
 
   // For frequency bands not partitioning data_history neatly
-  int offset_or_not; // 0 = don't, 1 = offset by data_size & FB.size
+  int offset_or_not; // 0 = don't, 1 = offset by data_history_size % frequency_size
 
 
   double* frequencies;

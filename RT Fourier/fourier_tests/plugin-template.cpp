@@ -24,6 +24,7 @@
 #include "plugin-template.h"
 #include <iostream>
 #include <main_window.h>
+#include <math.h>
 
 extern "C" Plugin::Object*
 createRTXIPlugin(void)
@@ -49,11 +50,11 @@ static DefaultGUIModel::variable_t vars[] = {
     "Realtime input voltage level",
      DefaultGUIModel::INPUT,
   },
-  {
+  /*{
     "Voltage In",
     "Realtime input voltage level",
      DefaultGUIModel::STATE,
-  },
+  },*/
   {
     "from (Hz)", "Lower end of frequency band",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
@@ -139,8 +140,10 @@ void PluginTemplate::update_fourier()
 }
 
 double PluginTemplate::significance(double frequency, int spot_in_history, bool offset_or_not){
-
-
+  if(offset_or_not == 1){
+    spot_in_history += data_history_size % static_cast<int>(frequency/period)
+  }
+  double value = std::cos(-2*PI*spot_in_history*frequency/data_history_size);
   return 1.0;
 }
 
@@ -148,8 +151,13 @@ void
 PluginTemplate::initParameters(double buffer_length, double from,
                                double to,            int samples)
 {
-  data_history_size = static_cast<int>(buffer_length / period);
+  data_history_size = static_cast<int>(buffer_length / period); // 
   data_history = new double[data_history_size];
+
+  // Clear out potential junk
+  for(int i = 0; i < data_history_size; i++){
+    data_history[i] = 0;
+  }
 
   num_frequencies = samples;
   double bandwidth = to - from;
@@ -168,7 +176,7 @@ PluginTemplate::initParameters(double buffer_length, double from,
 
 void
 PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
-{
+{  
   double buffer_length, from, to;
   switch (flag) {
     case INIT:
@@ -194,8 +202,8 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       to = getParameter("to (Hz)").toDouble();
       num_frequencies = getParameter("# Samples in frequency band").toInt();
       // Deallocate memory allocated by INIT to reallocate
-      delete frequencies;
-      delete data_history;
+      //delete frequencies;
+      //delete data_history;
       initParameters(buffer_length, from, to, num_frequencies);
 
       /*for (int i = 0; i < samples; i++) {
