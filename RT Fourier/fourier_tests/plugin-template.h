@@ -22,7 +22,7 @@
  */
 
 #include <default_gui_model.h>
-#include <math.h>
+#include <cmath>
 
 class PluginTemplate : public DefaultGUIModel
 {
@@ -69,6 +69,7 @@ private:
 
   void update_fourier();
   double significance(double frequency, int spot_in_history, bool offset_or_not);
+
 
 private slots:
 

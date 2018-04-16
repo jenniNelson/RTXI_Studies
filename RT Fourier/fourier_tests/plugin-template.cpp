@@ -24,7 +24,7 @@
 #include "plugin-template.h"
 #include <iostream>
 #include <main_window.h>
-#include <math.h>
+#include <cmath>
 
 extern "C" Plugin::Object*
 createRTXIPlugin(void)
