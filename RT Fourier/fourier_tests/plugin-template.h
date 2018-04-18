@@ -22,6 +22,7 @@
  */
 
 #include <default_gui_model.h>
+#include "frequency.h"
 #include <cmath>
 
 class PluginTemplate : public DefaultGUIModel
@@ -42,8 +43,6 @@ protected:
   virtual void update(DefaultGUIModel::update_flags_t);
 
 private:
-  double out_data;
-  double period;
 
   // History of received recordings.
   double* data_history;
@@ -56,20 +55,14 @@ private:
   // Out-of-date data (Used in RT method)
   double replaced;
 
-  // For frequency bands not partitioning data_history neatly
-  int offset_or_not; // 0 = don't, 1 = offset by data_history_size % frequency_size
-
-
-  double* frequencies;
+  frequency* frequencies;
   int num_frequencies;
-  double total_sum;
+  double total_power;
 
   void initParameters(double buffer_length, double from,
                       double to,            int samples);
 
   void update_fourier();
-  double significance(double frequency, int spot_in_history, bool offset_or_not);
-
 
 private slots:
 

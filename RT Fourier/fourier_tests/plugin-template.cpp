@@ -93,6 +93,8 @@ PluginTemplate::PluginTemplate(void)
 
 PluginTemplate::~PluginTemplate(void)
 {
+  delete[] frequencies;
+  delete[] data_history;
 }
 
 /// The real-time loop. Output and needed calculations only, NOT FOR GUI jazz.
@@ -112,41 +114,38 @@ void PluginTemplate::update_fourier()
   // get the oldest piece of data we have
   replaced = data_history[data_idx];
 
-  // for every frequency we're sampling, update sum according to it:
-  for (int i = 0; i < num_frequencies; i++) {
-    // subtract the old data from that frequency's sum
-    // (according to its significance for the frequency band)
-    total_sum -= replaced * significance(frequencies[i], data_idx, !offset_or_not);
+  total_power = 0;
 
-    // add the new data, again according to its significance
-    total_sum += new_data * significance(frequencies[i], data_idx, offset_or_not);
+  // for every frequency we're sampling, update sums according to it:
+  for (int i = 0; i < num_frequencies; i++) {
+
+    *frequency freq = frequencies[i];
+
+    double oldest = data_history[ freq->oldest_idx ];
+
+    freq->real_sum -= oldest * freq->real_significance();
+    freq->imaginary_sum -= oldest * freq->imaginary_significance();
+
+    freq->real_sum += new_data * freq->real_significance();
+    freq->imaginary_sum += new_data * freq->imaginary_significance();
+
+    freq->increment_one_timestep();
+
+    total_power += std::sqrt(std::pow(freq->real_sum, 2), std::pow(freq->real_sum, 2));
 
   }
 
   // Output the average power level over all the samples
-  out_data = (total_sum/num_frequencies)/data_history_size;
-  //output(0) = out_data;
-  output(0) = significance(frequencies[1], data_idx, offset_or_not);
+  out_data = total_power / num_frequencies;
+
+  output(0) = out_data;
+
   // replace old data with new
   data_history[data_idx] = new_data;
 
-  // increment data pointer
-  data_idx++;
-  // wrap pointer if needed (and notify frequency bands they should wrap)
-  if(data_idx > data_history_size){
-    data_idx = data_idx % data_history_size;
-    offset_or_not = (offset_or_not + 1) % 2;
-  }
-}
+  // increment data pointer and wrap pointer if needed
+  data_idx = (data_idx + 1) % data_history_size;
 
-double PluginTemplate::significance(double frequency, int spot_in_history, bool offset_or_not){
-  if(offset_or_not){
-    spot_in_history += data_history_size % static_cast<int>(frequency/period);
-  }
-  double value_real = std::cos(-2*PI*spot_in_history*frequency/data_history_size);
-  //double value_imaginary = std::sin(-2*PI*spot_in_history*frequency/data_history_size);
-  //double value = std::sqrt(value_real*value_real + )
-  return std::abs(value_real);
 }
 
 void
@@ -161,24 +160,20 @@ PluginTemplate::initParameters(double buffer_length, double from,
     data_history[i] = 0;
   }
   //Reset anything that could go wrong.
-  total_sum = 0;
   data_idx = 0;
-  offset_or_not = 0;
   replaced = 0;
-  out_data = 0;
-
 
   num_frequencies = samples;
   double bandwidth = to - from;
   double gap = bandwidth / (samples + 1);
 
   // initialize array of all our frequency samples
-  frequencies = new double[num_frequencies];
+  frequencies = new frequency[num_frequencies];
 
   for (int i = 0; i < num_frequencies; i++) {
     // Sample the middles of frequency range
     // (i.e [_._._._] where . is a sample.)
-    frequencies[i] = gap*i + gap/2 + from;
+    frequencies[i] = new frequency(gap*i + gap/2 + from, period, data_history_size);
   }
 
 }
@@ -192,13 +187,18 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
       out_data = 0.0; new_data = 0.0;
       buffer_length = 100.0; from = 13.0; to = 30.0;
-      num_frequencies = 1;
+      num_frequencies = 4;
       setState("Output Channel", out_data);
       setState("Voltage In", new_data);
       setParameter("Buffer length", buffer_length); // ms
       setParameter("from (Hz)", from);
       setParameter("to (Hz)", to);
       setParameter("# Samples in frequency band", num_frequencies);
+
+      // If buffer length too small, increase it:
+      if(buffer_length < 1/(from/1000)){
+        buffer_length = 1/(from/1000) + 1;
+      }
 
       initParameters(buffer_length, from, to, num_frequencies);
       break;
@@ -211,16 +211,16 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       to = getParameter("to (Hz)").toDouble();
       num_frequencies = getParameter("# Samples in frequency band").toInt();
       // Deallocate memory allocated by INIT to reallocate
-      //delete frequencies;
-      //delete data_history;
+      delete[] frequencies;
+      delete[] data_history;
+
+      // If buffer length too small, increase it:
+      if(buffer_length < 1/(from/1000)){
+        buffer_length = 1/(from/1000) + 1;
+      }
+
       initParameters(buffer_length, from, to, num_frequencies);
 
-      /*for (int i = 0; i < samples; i++) {
-        // Sample the middles of frequency range
-        //  (i.e [_._._._] where . is a sample.)
-        double gap = (to - from) / (samples + 1);
-        frequencies[i] = gap*i + gap/2 + from;
-      }*/
       break;
 
     case UNPAUSE:
@@ -233,9 +233,10 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       // We really don't know what to do here
       period = RT::System::getInstance()->getPeriod() * 1e-6; // ms
       break;
+
     case EXIT:
-      delete frequencies; // Deallocate memory
-      delete data_history;
+      delete[] frequencies; // Deallocate memory
+      delete[] data_history;
       break;
 
     default:
