@@ -54,8 +54,11 @@ private:
   double new_data;
   // Out-of-date data (Used in RT method)
   double replaced;
+  double out_data;
 
-  frequency* frequencies;
+  double period; //ms
+
+  frequency** frequencies;
   int num_frequencies;
   double total_power;
 

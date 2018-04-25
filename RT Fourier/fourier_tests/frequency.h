@@ -26,6 +26,7 @@ public:
 
 
   frequency(double frequency_in_hz, double rt_period_in_ms, int _data_history_size);
+  frequency();
   ~frequency();
 
 

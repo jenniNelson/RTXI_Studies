@@ -25,6 +25,7 @@
 #include <iostream>
 #include <main_window.h>
 #include <cmath>
+#include "frequency.h"
 
 extern "C" Plugin::Object*
 createRTXIPlugin(void)
@@ -93,8 +94,8 @@ PluginTemplate::PluginTemplate(void)
 
 PluginTemplate::~PluginTemplate(void)
 {
-  delete[] frequencies;
-  delete[] data_history;
+  //delete[] frequencies;
+  //delete[] data_history;
 }
 
 /// The real-time loop. Output and needed calculations only, NOT FOR GUI jazz.
@@ -114,37 +115,38 @@ void PluginTemplate::update_fourier()
   // get the oldest piece of data we have
   replaced = data_history[data_idx];
 
-  total_power = 0;
-
+  // total_power = 0;
+  //
+  frequency* freq;
   // for every frequency we're sampling, update sums according to it:
   for (int i = 0; i < num_frequencies; i++) {
 
-    *frequency freq = frequencies[i];
+    frequency* freq = frequencies[i];
 
     double oldest = data_history[ freq->oldest_idx ];
 
     freq->real_sum -= oldest * freq->real_significance();
     freq->imaginary_sum -= oldest * freq->imaginary_significance();
-
+    //
     freq->real_sum += new_data * freq->real_significance();
     freq->imaginary_sum += new_data * freq->imaginary_significance();
 
     freq->increment_one_timestep();
 
-    total_power += std::sqrt(std::pow(freq->real_sum, 2), std::pow(freq->real_sum, 2));
+    total_power += std::sqrt(std::pow(freq.real_sum, 2) + std::pow(freq.real_sum, 2));
 
   }
 
   // Output the average power level over all the samples
-  out_data = total_power / num_frequencies;
-
-  output(0) = out_data;
-
-  // replace old data with new
-  data_history[data_idx] = new_data;
-
-  // increment data pointer and wrap pointer if needed
-  data_idx = (data_idx + 1) % data_history_size;
+  // out_data = total_power / num_frequencies;
+  //
+  // output(0) = out_data;
+  //
+  // // replace old data with new
+  // data_history[data_idx] = new_data;
+  //
+  // // increment data pointer and wrap pointer if needed
+  // data_idx = (data_idx + 1) % data_history_size;
 
 }
 
@@ -168,7 +170,7 @@ PluginTemplate::initParameters(double buffer_length, double from,
   double gap = bandwidth / (samples + 1);
 
   // initialize array of all our frequency samples
-  frequencies = new frequency[num_frequencies];
+  frequencies = new frequency*[num_frequencies];
 
   for (int i = 0; i < num_frequencies; i++) {
     // Sample the middles of frequency range
@@ -211,8 +213,8 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       to = getParameter("to (Hz)").toDouble();
       num_frequencies = getParameter("# Samples in frequency band").toInt();
       // Deallocate memory allocated by INIT to reallocate
-      delete[] frequencies;
-      delete[] data_history;
+      //delete frequencies;
+      //delete[] data_history;
 
       // If buffer length too small, increase it:
       if(buffer_length < 1/(from/1000)){

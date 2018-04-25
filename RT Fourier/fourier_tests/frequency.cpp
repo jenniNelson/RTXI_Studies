@@ -32,6 +32,16 @@ frequency::frequency(double _frequency_in_hz, double rt_period_in_ms, int _data_
 //  oldest_imaginary_idx = data_history_size - period_length_in_rt_units;
 }
 
+frequency::frequency(){
+  // period_for_this_freq = -1;
+  // frequency_in_hz = -1;
+  // data_history_size = -1;
+  // real_sum = -1;
+  // imaginary_sum = -1;
+  // newest_idx = -1;
+  // oldest_idx = -1;
+}
+
 frequency::~frequency(){
   delete[] cosine;
   delete[] sine;
