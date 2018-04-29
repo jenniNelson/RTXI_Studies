@@ -115,8 +115,8 @@ void PluginTemplate::update_fourier()
   // get the oldest piece of data we have
   replaced = data_history[data_idx];
 
-  // total_power = 0;
-  //
+  total_power = 0;
+//
   frequency* freq;
   // for every frequency we're sampling, update sums according to it:
   for (int i = 0; i < num_frequencies; i++) {
@@ -133,20 +133,20 @@ void PluginTemplate::update_fourier()
 
     freq->increment_one_timestep();
 
-    total_power += std::sqrt(std::pow(freq.real_sum, 2) + std::pow(freq.real_sum, 2));
+    total_power += std::sqrt(std::pow(freq->real_sum, 2) + std::pow(freq->real_sum, 2));
 
   }
 
   // Output the average power level over all the samples
-  // out_data = total_power / num_frequencies;
-  //
-  // output(0) = out_data;
-  //
-  // // replace old data with new
-  // data_history[data_idx] = new_data;
-  //
-  // // increment data pointer and wrap pointer if needed
-  // data_idx = (data_idx + 1) % data_history_size;
+  out_data = total_power / 10000000;
+
+  output(0) = out_data;
+
+  // replace old data with new
+  data_history[data_idx] = new_data;
+
+  // increment data pointer and wrap pointer if needed
+  data_idx = (data_idx + 1) % data_history_size;
 
 }
 
@@ -198,8 +198,8 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       setParameter("# Samples in frequency band", num_frequencies);
 
       // If buffer length too small, increase it:
-      if(buffer_length < 1/(from/1000)){
-        buffer_length = 1/(from/1000) + 1;
+      if(buffer_length < 1000/from ){
+        buffer_length = 1000/from + 1;
       }
 
       initParameters(buffer_length, from, to, num_frequencies);
