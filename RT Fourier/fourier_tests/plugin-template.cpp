@@ -127,21 +127,24 @@ void PluginTemplate::update_fourier()
 
     freq->real_sum -= oldest * freq->real_significance();
     freq->imaginary_sum -= oldest * freq->imaginary_significance();
-    //
+    
     freq->real_sum += new_data * freq->real_significance();
     freq->imaginary_sum += new_data * freq->imaginary_significance();
-
+//output(0) = 10000000*oldest * freq->real_significance();
+//output(0) = freq->real_sum;
     freq->increment_one_timestep();
 
-    total_power += std::sqrt(std::pow(freq->real_sum, 2) + std::pow(freq->real_sum, 2));
-
+    total_power += std::sqrt(std::pow((freq->real_sum)/(freq->perd_for_freq_in_RT_units), 2) + std::pow((freq->imaginary_sum)/(freq->perd_for_freq_in_RT_units), 2));
+//output(0) = std::sqrt(std::pow(freq->real_sum, 2) + std::pow(freq->real_sum, 2));
   }
 
   // Output the average power level over all the samples
-  out_data = total_power / 10000000;
+  out_data = total_power / (num_frequencies);
 
   output(0) = out_data;
-
+//  output(0) = (frequencies[0]->real_sum /frequencies[0]->perd_for_freq_in_RT_units) * (frequencies[0]->real_sum /frequencies[0]->perd_for_freq_in_RT_units) + (frequencies[0]->imaginary_sum /frequencies[0]->perd_for_freq_in_RT_units) * (frequencies[0]->imaginary_sum /frequencies[0]->perd_for_freq_in_RT_units);
+ // output(0) = new_data;
+  //output(0) = data_history[data_idx]* frequencies[0]->real_significance();
   // replace old data with new
   data_history[data_idx] = new_data;
 

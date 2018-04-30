@@ -15,14 +15,14 @@ public:
   double imaginary_sum;
 
   int data_history_size;
+  int perd_for_freq_in_RT_units;
   double* cosine;
   double* sine;
   double period_for_this_freq; //seconds
 
   int oldest_idx;
   int newest_idx;
-  // int oldest_imaginary_idx;
-  // int newest_imaginary_idx;
+  int significance_idx;
 
 
   frequency(double frequency_in_hz, double rt_period_in_ms, int _data_history_size);
