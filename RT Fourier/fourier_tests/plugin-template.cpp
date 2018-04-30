@@ -69,7 +69,7 @@ static DefaultGUIModel::variable_t vars[] = {
     DefaultGUIModel::PARAMETER | DefaultGUIModel::INTEGER,
   },
   {
-    "Buffer length", "How far back to measure frequency band level with (ms)",
+    "Buffer length (ms)", "How far back to measure frequency band level with (ms)",
     DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE,
   },
 };
@@ -144,7 +144,7 @@ void PluginTemplate::update_fourier()
   output(0) = out_data;
 //  output(0) = (frequencies[0]->real_sum /frequencies[0]->perd_for_freq_in_RT_units) * (frequencies[0]->real_sum /frequencies[0]->perd_for_freq_in_RT_units) + (frequencies[0]->imaginary_sum /frequencies[0]->perd_for_freq_in_RT_units) * (frequencies[0]->imaginary_sum /frequencies[0]->perd_for_freq_in_RT_units);
  // output(0) = new_data;
-  //output(0) = data_history[data_idx]* frequencies[0]->real_significance();
+  //output(0) = frequencies[0]->real_significance();
   // replace old data with new
   data_history[data_idx] = new_data;
 
@@ -159,6 +159,9 @@ PluginTemplate::initParameters(double buffer_length, double from,
 {
   data_history_size = static_cast<int>(buffer_length / period); //
   data_history = new double[data_history_size];
+
+  buffer_length = data_history_size*period;
+  setParameter("Buffer length (ms)", buffer_length);
 
   // Clear out potential junk
   for(int i = 0; i < data_history_size; i++){
@@ -195,34 +198,54 @@ PluginTemplate::update(DefaultGUIModel::update_flags_t flag)
       num_frequencies = 4;
       setState("Output Channel", out_data);
       setState("Voltage In", new_data);
-      setParameter("Buffer length", buffer_length); // ms
+      setParameter("Buffer length (ms)", buffer_length); // ms
       setParameter("from (Hz)", from);
       setParameter("to (Hz)", to);
       setParameter("# Samples in frequency band", num_frequencies);
 
+      if(from > to){
+        double temp = from;
+        from = to;
+        to = temp;
+        setParameter("from (Hz)", from);
+        setParameter("to (Hz)", to);
+      }
+      
+
       // If buffer length too small, increase it:
       if(buffer_length < 1000/from ){
-        buffer_length = 1000/from + 1;
+        buffer_length = 1000/from + 10;
       }
 
+      setParameter("Buffer length (ms)", buffer_length);
+      
       initParameters(buffer_length, from, to, num_frequencies);
       break;
 
     case MODIFY:
-
-
-      buffer_length = getParameter("Buffer length").toDouble(); // ms
+      buffer_length = getParameter("Buffer length (ms)").toDouble(); // ms
       from = getParameter("from (Hz)").toDouble();
       to = getParameter("to (Hz)").toDouble();
+
+      if(from > to){
+        double temp = from;
+        from = to;
+        to = temp;
+        setParameter("from (Hz)", from);
+        setParameter("to (Hz)", to);
+      }
+      
       num_frequencies = getParameter("# Samples in frequency band").toInt();
       // Deallocate memory allocated by INIT to reallocate
       //delete frequencies;
       //delete[] data_history;
 
       // If buffer length too small, increase it:
-      if(buffer_length < 1/(from/1000)){
-        buffer_length = 1/(from/1000) + 1;
+      if(buffer_length < 1000/(from)){
+        buffer_length = 1000/(from) + 10;
       }
+
+      setParameter("Buffer length (ms)", buffer_length);
 
       initParameters(buffer_length, from, to, num_frequencies);
 

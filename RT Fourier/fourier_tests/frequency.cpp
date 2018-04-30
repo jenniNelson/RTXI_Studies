@@ -6,7 +6,7 @@
 frequency::frequency(double _frequency_in_hz, double rt_period_in_ms, int _data_history_size){
 
   // Even frequency's period with real-time period: 1/f + (1/f)% rt_period
-  period_for_this_freq = 1/(_frequency_in_hz) + std::fmod((1/(_frequency_in_hz)),1000*rt_period_in_ms);
+  period_for_this_freq = 1/(_frequency_in_hz) + std::fmod((1/(_frequency_in_hz)),rt_period_in_ms/1000);
 
   frequency_in_hz = 1/ period_for_this_freq;
 
